@@ -32,12 +32,38 @@ st.set_page_config(
 # 🔧 KONFIGURASI FILE CSV DAN AUTO-UPDATE
 # =============================================================================
 
+# UNTUK DEPLOYMENT KE STREAMLIT CLOUD via GITHUB:
+# Pastikan struktur repository Anda seperti ini:
+# 
+# your-repo/
+# ├── dashboardLSTM_v4.py          # Script utama
+# ├── data2parfull_cleaned.csv     # File data CSV
+# ├── best_lstm_model.h5           # Model LSTM  
+# ├── foto.jpg                     # Background image
+# ├── requirements.txt             # Dependencies
+# └── README.md                    # (optional)
+#
+# Atau dengan folder assets:
+# your-repo/
+# ├── dashboardLSTM_v4.py
+# ├── assets/
+# │   └── foto.jpg
+# ├── data2parfull_cleaned.csv
+# ├── best_lstm_model.h5
+# └── requirements.txt
+
 # GANTI NAMA FILE CSV ANDA DI SINI
 CSV_FILE_NAME = "data2parfull_cleaned.csv"
 CSV_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), CSV_FILE_NAME)
 
-# Path foto yang diperbaiki
-FOTO_PATH = r"D:\project pak par\PLn 2025\GUI\data csv\Final\foto.jpg"
+# Path foto untuk GitHub deployment (relative path)
+# Pastikan file foto.jpg ada di folder yang sama dengan script Python ini
+# atau buat folder 'assets' dan letakkan foto di sana
+FOTO_NAME = "foto.jpg"  # Nama file foto
+FOTO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), FOTO_NAME)
+
+# Alternative: jika ingin menggunakan folder assets
+# FOTO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", FOTO_NAME)
 
 # Interval update default dalam detik (3 jam = 10800 detik)
 DEFAULT_UPDATE_INTERVAL = 10800
@@ -96,11 +122,43 @@ def authenticate_user(username, password):
 def load_and_encode_image(image_path):
     """Load and encode image to base64 for display"""
     try:
+        # Primary path: same folder as script
         if os.path.exists(image_path):
             with open(image_path, "rb") as img_file:
                 return base64.b64encode(img_file.read()).decode()
+        
+        # Alternative paths to try
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        alternative_paths = [
+            os.path.join(script_dir, "assets", FOTO_NAME),
+            os.path.join(script_dir, "images", FOTO_NAME),
+            os.path.join(script_dir, "static", FOTO_NAME),
+            os.path.join(script_dir, FOTO_NAME)
+        ]
+        
+        for alt_path in alternative_paths:
+            if os.path.exists(alt_path):
+                with open(alt_path, "rb") as img_file:
+                    return base64.b64encode(img_file.read()).decode()
+        
+        # If no image found, show helpful message
+        st.sidebar.info(f"""
+        📷 **Background Image Info:**
+        
+        Looking for: `{FOTO_NAME}`
+        
+        **Checked locations:**
+        {chr(10).join(['• ' + path for path in [image_path] + alternative_paths])}
+        
+        **To add background image:**
+        1. Upload `{FOTO_NAME}` to your GitHub repository 
+        2. Place it in the same folder as this script
+        3. Or create an `assets/` folder and put it there
+        """)
+        
     except Exception as e:
-        st.warning(f"Could not load background image: {e}")
+        st.sidebar.warning(f"Could not load background image: {e}")
+    
     return None
 
 def apply_custom_css():
