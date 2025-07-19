@@ -18,9 +18,6 @@ import base64
 
 warnings.filterwarnings('ignore')
 
-# =============================================================================
-# ⚙️ KONFIGURASI APLIKASI GLOBAL (HARUS DI BAGIAN ATAS DAN HANYA SEKALI)
-# =============================================================================
 st.set_page_config(
     page_title="Industrial Gas Removal Monitoring System",
     page_icon="🏭",
@@ -28,58 +25,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# =============================================================================
-# 🔧 KONFIGURASI FILE CSV DAN AUTO-UPDATE
-# =============================================================================
-
-# UNTUK DEPLOYMENT KE STREAMLIT CLOUD via GITHUB:
-# Pastikan struktur repository Anda seperti ini:
-# 
-# your-repo/
-# ├── dashboardLSTM_v4.py          # Script utama
-# ├── data2parfull_cleaned.csv     # File data CSV
-# ├── best_lstm_model.h5           # Model LSTM  
-# ├── foto.jpg                     # Background image
-# ├── requirements.txt             # Dependencies
-# └── README.md                    # (optional)
-#
-# Atau dengan folder assets:
-# your-repo/
-# ├── dashboardLSTM_v4.py
-# ├── assets/
-# │   └── foto.jpg
-# ├── data2parfull_cleaned.csv
-# ├── best_lstm_model.h5
-# └── requirements.txt
-
-# GANTI NAMA FILE CSV ANDA DI SINI
 CSV_FILE_NAME = "data2parfull_cleaned.csv"
 CSV_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), CSV_FILE_NAME)
 
-# Path foto untuk GitHub deployment (relative path)
-# Pastikan file foto.jpg ada di folder yang sama dengan script Python ini
-# atau buat folder 'assets' dan letakkan foto di sana
-FOTO_NAME = "foto.jpg"  # Nama file foto
+FOTO_NAME = "foto.jpg"
 FOTO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), FOTO_NAME)
 
-# Alternative: jika ingin menggunakan folder assets
-# FOTO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", FOTO_NAME)
-
-# Interval update default dalam detik (3 jam = 10800 detik)
 DEFAULT_UPDATE_INTERVAL = 10800
-
-# Define the target timezone (Indonesia/Jakarta for WIB)
 INDONESIA_TIMEZONE = pytz.timezone('Asia/Jakarta')
 
-# =============================================================================
-# 🔐 SECURE AUTHENTICATION SYSTEM
-# =============================================================================
-
 def hash_password(password):
-    """Secure password hashing using SHA256"""
     return hashlib.sha256(password.encode()).hexdigest()
 
-# Industrial-grade user credentials
 USER_CREDENTIALS = {
     "engineer": hash_password("engineer123"),
     "supervisor": hash_password("supervisor123"),
@@ -115,19 +72,12 @@ def authenticate_user(username, password):
         return USER_CREDENTIALS[username] == hash_password(password)
     return False
 
-# =============================================================================
-# 🎨 HELPER FUNCTIONS FOR STYLING
-# =============================================================================
-
 def load_and_encode_image(image_path):
-    """Load and encode image to base64 for display"""
     try:
-        # Primary path: same folder as script
         if os.path.exists(image_path):
             with open(image_path, "rb") as img_file:
                 return base64.b64encode(img_file.read()).decode()
         
-        # Alternative paths to try
         script_dir = os.path.dirname(os.path.abspath(__file__))
         alternative_paths = [
             os.path.join(script_dir, "assets", FOTO_NAME),
@@ -140,29 +90,12 @@ def load_and_encode_image(image_path):
             if os.path.exists(alt_path):
                 with open(alt_path, "rb") as img_file:
                     return base64.b64encode(img_file.read()).decode()
-        
-        # If no image found, show helpful message
-        st.sidebar.info(f"""
-        📷 **Background Image Info:**
-        
-        Looking for: `{FOTO_NAME}`
-        
-        **Checked locations:**
-        {chr(10).join(['• ' + path for path in [image_path] + alternative_paths])}
-        
-        **To add background image:**
-        1. Upload `{FOTO_NAME}` to your GitHub repository 
-        2. Place it in the same folder as this script
-        3. Or create an `assets/` folder and put it there
-        """)
-        
-    except Exception as e:
-        st.sidebar.warning(f"Could not load background image: {e}")
+    except Exception:
+        pass
     
     return None
 
 def apply_custom_css():
-    """Apply custom CSS styling"""
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -200,22 +133,202 @@ def apply_custom_css():
         .status-warning { color: #ffc107; font-weight: 600; }
         .status-critical { color: #dc3545; font-weight: 600; }
         
+        .login-header-container {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 15px !important;
+            padding: 2rem 2.5rem !important;
+            margin: 2rem auto 1rem auto !important;
+            max-width: 800px !important;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+            text-align: center !important;
+        }
+        
+        .login-header-container h1,
+        .login-header-container h2,
+        .login-header-container h3,
+        .login-header-container p {
+            color: #333333 !important;
+            text-shadow: none !important;
+            margin: 0.5rem 0 !important;
+        }
+        
+        .login-header-container h1 {
+            font-size: 3rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .login-header-container .main-title {
+            font-size: 3rem !important;
+            font-weight: 700 !important;
+            color: #2c3e50 !important;
+        }
+        
+        .login-header-container .subtitle {
+            font-size: 2rem !important;
+            color: #7f8c8d !important;
+            font-weight: 500 !important;
+        }
+        
+        .login-glass-container {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(25px) !important;
+            -webkit-backdrop-filter: blur(25px) !important;
+            border-radius: 25px !important;
+            border: 2px solid rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.1),
+                0 5px 15px rgba(0, 0, 0, 0.07),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+            padding: 2.5rem 2.5rem !important;
+            margin: 0 auto 2rem auto !important;
+            position: relative !important;
+            overflow: hidden !important;
+            max-width: 500px !important;
+        }
+        
+        .login-glass-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0.05) 50%,
+                rgba(255, 255, 255, 0.1) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .login-glass-container h2,
+        .login-glass-container h3 {
+            color: white !important;
+            text-align: center !important;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6) !important;
+            margin-bottom: 1.5rem !important;
+        }
+        
+        .login-glass-container .section-title {
+            font-size: 1.6rem !important;
+            font-weight: 600 !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        .login-glass-container .form-title {
+            font-size: 1.3rem !important;
+            font-weight: 500 !important;
+            margin-bottom: 1.5rem !important;
+        }
+        
+        .login-glass-container .stTextInput > div > div > input {
+            background: rgba(255, 255, 255, 0.25) !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            border-radius: 15px !important;
+            color: white !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+            font-weight: 500 !important;
+            padding: 15px 20px !important;
+            font-size: 16px !important;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .login-glass-container .stTextInput > div > div > input:focus {
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.1),
+                0 0 20px rgba(255, 255, 255, 0.2) !important;
+            outline: none !important;
+        }
+        
+        .login-glass-container .stTextInput > div > div > input::placeholder {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-weight: 400 !important;
+        }
+        
+        .login-glass-container .stTextInput > label {
+            color: white !important;
+            font-weight: 600 !important;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6) !important;
+            font-size: 16px !important;
+            margin-bottom: 8px !important;
+        }
+        
+        .login-glass-container .stButton > button {
+            background: linear-gradient(135deg, 
+                rgba(102, 126, 234, 0.9), 
+                rgba(118, 75, 162, 0.9)) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            color: white !important;
+            font-weight: 700 !important;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6) !important;
+            border-radius: 15px !important;
+            padding: 15px 25px !important;
+            font-size: 18px !important;
+            letter-spacing: 1px !important;
+            text-transform: uppercase !important;
+            transition: all 0.4s ease !important;
+            box-shadow: 
+                0 8px 20px rgba(102, 126, 234, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        .login-glass-container .stButton > button:hover {
+            background: linear-gradient(135deg, 
+                rgba(102, 126, 234, 1), 
+                rgba(118, 75, 162, 1)) !important;
+            transform: translateY(-3px) !important;
+            box-shadow: 
+                0 15px 35px rgba(102, 126, 234, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+        }
+        
+        .login-glass-container [data-testid="stForm"] {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        
+        .login-glass-container .stAlert {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 10px !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+        }
+        
+        .login-glass-container .stAlert [data-testid="alertIndicator"] {
+            color: white !important;
+        }
+        
+        .login-glass-footer {
+            text-align: center !important;
+            margin-top: 2rem !important;
+            padding-top: 2rem !important;
+            border-top: 1px solid rgba(255,255,255,0.3) !important;
+        }
+        
+        .login-glass-footer p {
+            color: white !important;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6) !important;
+            margin: 0.5rem 0 !important;
+        }
+        
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# =============================================================================
-# 🔄 AUTO-UPDATE FUNCTIONS
-# =============================================================================
-
 def get_current_localized_time():
-    """Get the current time localized to the Indonesia timezone."""
     return datetime.now(INDONESIA_TIMEZONE)
 
 def init_session_state():
-    """Initialize session state variables for auto-update functionality"""
     if 'last_update_time' not in st.session_state:
         st.session_state.last_update_time = get_current_localized_time()
     
@@ -233,13 +346,14 @@ def init_session_state():
     
     if 'selected_interval_label' not in st.session_state:
         st.session_state.selected_interval_label = '3 hours'
+    
+    if 'last_manual_refresh' not in st.session_state:
+        st.session_state.last_manual_refresh = None
 
 @st.cache_data(ttl=DEFAULT_UPDATE_INTERVAL)
 def load_csv_automatically(file_path):
-    """Load CSV file automatically with caching"""
     try:
         if not os.path.exists(file_path):
-            st.sidebar.error(f"❌ File tidak ditemukan: {os.path.basename(file_path)}")
             return None
         
         delimiters = [',', ';', '\t']
@@ -254,17 +368,14 @@ def load_csv_automatically(file_path):
                 continue
         
         if df is None:
-            st.sidebar.error(f"❌ Gagal membaca file: {os.path.basename(file_path)}")
             return None
         
         return df
         
-    except Exception as e:
-        st.sidebar.error(f"❌ Error loading CSV: {str(e)}")
+    except Exception:
         return None
 
 def check_and_update():
-    """Check if it's time to update data"""
     current_time = get_current_localized_time()
     time_diff = (current_time - st.session_state.last_update_time).total_seconds()
     
@@ -274,7 +385,6 @@ def check_and_update():
         st.rerun()
 
 def format_time_remaining():
-    """Format time remaining until next update"""
     current_time = get_current_localized_time()
     time_diff = (current_time - st.session_state.last_update_time).total_seconds()
     time_remaining = st.session_state.update_interval - time_diff
@@ -288,15 +398,9 @@ def format_time_remaining():
     
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-# =============================================================================
-# 🔐 LOGIN PAGE - PURE STREAMLIT VERSION
-# =============================================================================
-
 def login_page():
-    """Pure Streamlit login page without HTML"""
     apply_custom_css()
     
-    # Display background image if available
     image_data = load_and_encode_image(FOTO_PATH)
     if image_data:
         st.markdown(f"""
@@ -315,42 +419,39 @@ def login_page():
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
             z-index: -1;
         }}
         </style>
         """, unsafe_allow_html=True)
     
-    # Center the login form
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        # Company header
-        st.markdown("# 🏭")
-        st.markdown("# Industrial Monitoring System")
-        st.markdown("### Gas Removal Predictive Maintenance")
-        st.markdown("---")
+        st.markdown("""
+        <div class="login-header-container">
+            <h1 class="main-title">Industrial Monitoring System</h1>
+            <p class="subtitle">Gas Removal Predictive Maintenance</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Secure access section
-        st.markdown("## 🔒 Secure Access")
-        st.info("Please authenticate to access the industrial monitoring system.")
-        
-        # Login form
         with st.form("secure_login", clear_on_submit=False):
-            st.markdown("### Login Credentials")
-            
             username = st.text_input(
                 "👤 Username", 
                 placeholder="Enter your username",
-                help="Use one of the demo credentials below"
+                key="username_input"
             )
             
             password = st.text_input(
                 "🔑 Password", 
                 type="password", 
                 placeholder="Enter your password",
-                help="Enter the corresponding password"
+                key="password_input"
             )
+            
+            st.markdown("<br>", unsafe_allow_html=True)
             
             login_button = st.form_submit_button("🚀 Access System", type="primary")
             
@@ -368,27 +469,15 @@ def login_page():
                 else:
                     st.warning("⚠️ Please provide both username and password.")
         
-        # Demo credentials
-        st.markdown("---")
-        st.markdown("### 🔑 Demo Credentials")
-        
-        col_demo1, col_demo2 = st.columns(2)
-        
-        with col_demo1:
-            st.info("**Engineer Access**\n\nUsername: `engineer`\n\nPassword: `engineer123`")
-            st.info("**Supervisor Access**\n\nUsername: `supervisor`\n\nPassword: `supervisor123`")
-        
-        with col_demo2:
-            st.info("**Administrator Access**\n\nUsername: `admin`\n\nPassword: `admin123`")
-            st.success("**Access Levels:**\n\n• Engineer: View, Analyze\n• Supervisor: + Export\n• Admin: + Configure")
-        
-        # Footer
-        st.markdown("---")
-        st.markdown("🔒 **Secure Industrial System Access**")
-        st.markdown("*Powered by Advanced Authentication & Monitoring*")
+        st.markdown("""
+            <div class="login-glass-footer">
+                <p style="font-weight: 600; font-size: 1.1rem;">🔒 Secure Industrial System Access</p>
+                <p style="opacity: 0.8; font-style: italic;">Powered by Advanced Authentication & Monitoring</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 def logout():
-    """Logout function"""
     for key in ['authenticated', 'username', 'user_info', 'csv_data', 'last_file_modified', 'last_update_time']:
         if key in st.session_state:
             del st.session_state[key]
@@ -396,17 +485,13 @@ def logout():
     st.rerun()
 
 def show_user_panel():
-    """Professional user information panel with auto-update controls"""
     if 'user_info' in st.session_state:
         user_info = st.session_state['user_info']
         
-        # User Profile
         st.sidebar.markdown("### 👤 User Profile")
         
-        # User info
         st.sidebar.success(f"**{user_info.get('name', 'User')}**\n\n{user_info.get('role', 'User')} • {user_info.get('department', 'General')}")
         
-        # Permissions
         permissions = user_info.get('permissions', [])
         st.sidebar.markdown("**Access Level:**")
         for perm in permissions:
@@ -414,17 +499,14 @@ def show_user_panel():
         
         st.sidebar.markdown("---")
         
-        # Auto-update controls
         st.sidebar.markdown("### 🔄 Auto-Update Settings")
         
-        # Toggle auto-update
         st.session_state.auto_update_enabled = st.sidebar.checkbox(
             "Enable Auto-Update",
             value=st.session_state.auto_update_enabled,
             help="Automatically refresh data at specified intervals"
         )
         
-        # Update interval selection
         update_options = {
             "1 hour": 3600,
             "3 hours": 10800,
@@ -456,48 +538,28 @@ def show_user_panel():
 
         st.session_state.selected_interval_label = selected_interval
         
-        # Show current status
         st.sidebar.markdown("**Auto-Update Status:**")
         if st.session_state.auto_update_enabled:
             st.sidebar.info(f"🕐 Next update in: {format_time_remaining()}")
         else:
             st.sidebar.warning("⏸️ Auto-update disabled")
         
-        # Manual refresh button
         if st.sidebar.button("🔄 Refresh Now", type="secondary"):
             load_csv_automatically.clear()
-            st.session_state.last_update_time = get_current_localized_time()
+            st.session_state.last_manual_refresh = get_current_localized_time()
             st.rerun()
         
-        # Show last update time
-        st.sidebar.write(f"**Last Updated:** {st.session_state.last_update_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        st.sidebar.write(f"**Next Auto-Update:** {st.session_state.last_update_time.strftime('%Y-%m-%d %H:%M:%S')}")
         
-        st.sidebar.markdown("---")
-        
-        # Current CSV file info
-        st.sidebar.markdown("### 📄 Data Source")
-        st.sidebar.info(f"**CSV File:** {CSV_FILE_NAME}")
-        
-        if os.path.exists(CSV_FILE_PATH):
-            file_size = os.path.getsize(CSV_FILE_PATH) / 1024
-            file_modified_utc = datetime.fromtimestamp(os.path.getmtime(CSV_FILE_PATH), pytz.utc)
-            file_modified_local = file_modified_utc.astimezone(INDONESIA_TIMEZONE)
-            st.sidebar.write(f"**Size:** {file_size:.2f} KB")
-            st.sidebar.write(f"**Modified:** {file_modified_local.strftime('%Y-%m-%d %H:%M:%S')}")
-        else:
-            st.sidebar.error("File not found!")
+        if st.session_state.last_manual_refresh:
+            st.sidebar.write(f"**Last Manual Refresh:** {st.session_state.last_manual_refresh.strftime('%Y-%m-%d %H:%M:%S')}")
         
         st.sidebar.markdown("---")
         
         if st.sidebar.button("🚪 Secure Logout", type="primary"):
             logout()
 
-# =============================================================================
-# 📊 INDUSTRIAL DASHBOARD MAIN SYSTEM
-# =============================================================================
-
 def show_system_status(system_status, current_pressure, predicted_pressure_now, threshold, predicted_breach_time=None):
-    """Display system status using Streamlit components"""
     if system_status == "CRITICAL":
         st.error(f"""
         🚨 **CRITICAL ALERT**
@@ -531,34 +593,23 @@ def show_system_status(system_status, current_pressure, predicted_pressure_now, 
         """)
 
 def main_dashboard():
-    """Professional Industrial Dashboard with Auto-Update"""
-    
     init_session_state()
     check_and_update()
     apply_custom_css()
     
-    # Main header
     st.markdown("# 🏭 Industrial Gas Removal Monitoring System")
     st.markdown("### Predictive Maintenance & Real-time Process Monitoring")
     st.markdown("---")
     
-    # User panel with auto-update controls
     show_user_panel()
     
-    # Sidebar configuration
-    st.sidebar.markdown("## ⚙️ System Configuration")
-    
-    # Model loading
     MODEL_PATH = "best_lstm_model.h5"
     try:
         model = load_model(MODEL_PATH, compile=False)
-        st.sidebar.success("✅ LSTM Model Loaded")
     except Exception as e:
-        st.sidebar.error(f"❌ Model Loading Failed: {str(e)}")
         st.error("Critical System Error: Cannot load predictive model. Please contact system administrator.")
         st.stop()
     
-    # System parameters
     st.sidebar.markdown("### 🎛️ System Parameters")
     
     col1, col2 = st.sidebar.columns(2)
@@ -598,22 +649,13 @@ def main_dashboard():
     
     show_detailed_table = st.sidebar.checkbox("Show Detailed Data Table", value=False)
     
-    # Load CSV using the cached function
     df = load_csv_automatically(CSV_FILE_PATH)
     
     if df is not None:
-        # Data processing (simplified version - keeping the core logic)
         with st.spinner("🔄 Processing sensor data..."):
-            # Show basic file info
-            st.sidebar.write(f"**CSV File Info:**")
-            st.sidebar.write(f"• File: {CSV_FILE_NAME}")
-            st.sidebar.write(f"• Shape: {df.shape}")
-            st.sidebar.write(f"• Columns: {list(df.columns)}")
-            
-            # Show sample data
             with st.expander("🔍 View Sample Data"):
                 st.dataframe(df.head(10), use_container_width=True)
-            # Identify columns
+            
             timestamp_cols = [c for c in df.columns if any(keyword in c.lower() 
                              for keyword in ['time', 'date', 'timestamp', 'waktu', 'tanggal'])]
             
@@ -626,108 +668,79 @@ def main_dashboard():
             
             pressure_col = pressure_cols[0]
             
-            # Process timestamps first
             if timestamp_cols:
                 timestamp_col = timestamp_cols[0]
-                st.sidebar.info(f"📅 Using timestamp column: {timestamp_col}")
                 
-                # Multiple datetime formats to try
                 date_formats = [
-                    '%d/%m/%Y %H:%M:%S',  # 14/12/2024 06:00:00
-                    '%d/%m/%Y %H:%M',     # 14/12/2024 06:00
-                    '%d-%m-%Y %H:%M:%S',  # 14-12-2024 06:00:00
-                    '%d-%m-%Y %H:%M',     # 14-12-2024 06:00
-                    '%Y-%m-%d %H:%M:%S',  # 2024-12-14 06:00:00
-                    '%Y-%m-%d %H:%M',     # 2024-12-14 06:00
-                    '%m/%d/%Y %H:%M:%S',  # 12/14/2024 06:00:00
-                    '%m/%d/%Y %H:%M',     # 12/14/2024 06:00
-                    '%d/%m/%Y',           # 14/12/2024
-                    '%d-%m-%Y',           # 14-12-2024
-                    '%Y-%m-%d',           # 2024-12-14
-                    '%m/%d/%Y'            # 12/14/2024
+                    '%d/%m/%Y %H:%M:%S',
+                    '%d/%m/%Y %H:%M',
+                    '%d-%m-%Y %H:%M:%S',
+                    '%d-%m-%Y %H:%M',
+                    '%Y-%m-%d %H:%M:%S',
+                    '%Y-%m-%d %H:%M',
+                    '%m/%d/%Y %H:%M:%S',
+                    '%m/%d/%Y %H:%M',
+                    '%d/%m/%Y',
+                    '%d-%m-%Y',
+                    '%Y-%m-%d',
+                    '%m/%d/%Y'
                 ]
                 
                 parsed_successfully = False
                 
-                # Try each format
                 for date_format in date_formats:
                     try:
                         df['timestamp'] = pd.to_datetime(df[timestamp_col], format=date_format, errors='coerce')
-                        # Check if parsing was successful (not all NaT)
                         if not df['timestamp'].isna().all():
                             parsed_successfully = True
-                            st.sidebar.success(f"✅ Timestamp parsed with format: {date_format}")
                             break
                     except Exception:
                         continue
                 
-                # If all explicit formats failed, try auto-inference
                 if not parsed_successfully:
                     try:
                         df['timestamp'] = pd.to_datetime(df[timestamp_col], errors='coerce', infer_datetime_format=True)
                         if not df['timestamp'].isna().all():
                             parsed_successfully = True
-                            st.sidebar.success("✅ Timestamp auto-inferred successfully")
                     except Exception:
                         pass
                 
-                # If still failed, create sequential timestamps
                 if not parsed_successfully or df['timestamp'].isna().all():
-                    st.sidebar.warning("⚠️ All timestamp parsing failed. Creating sequential timestamps.")
                     df['timestamp'] = pd.date_range(start='2024-01-01', periods=len(df), freq='H', tz=INDONESIA_TIMEZONE)
                 else:
-                    # Convert to Indonesia timezone if parsing was successful
                     try:
                         if df['timestamp'].dt.tz is None:
                             df['timestamp'] = df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(INDONESIA_TIMEZONE)
                         else:
                             df['timestamp'] = df['timestamp'].dt.tz_convert(INDONESIA_TIMEZONE)
                     except Exception as e:
-                        st.sidebar.warning(f"⚠️ Timezone conversion failed: {e}. Using naive timestamps.")
+                        pass
             else:
-                st.sidebar.warning("⚠️ No timestamp column found. Creating sequential timestamps.")
                 df['timestamp'] = pd.date_range(start='2024-01-01', periods=len(df), freq='H', tz=INDONESIA_TIMEZONE)
             
-            # Clean and prepare data AFTER timestamp processing
             data = df[[pressure_col]].copy()
             data = data.apply(lambda x: pd.to_numeric(x.astype(str).str.replace(',', '.'), errors='coerce'))
             
-            # Keep track of valid indices before dropping NaN
             valid_indices = data.dropna().index
             data = data.dropna()
             
             if (data < 0).any().any():
-                st.sidebar.warning("⚠️ Negative values detected and clipped to zero.")
                 data = data.clip(lower=0)
             
             ground_truth_all = data.values.flatten()
-            # Use the same valid indices for timestamps to ensure alignment
             timestamps_all = df['timestamp'].iloc[valid_indices].tolist()
             
-            # Debug information
-            st.sidebar.write(f"**Data Processing Info:**")
-            st.sidebar.write(f"• Original rows: {len(df)}")
-            st.sidebar.write(f"• Valid data points: {len(ground_truth_all)}")
-            st.sidebar.write(f"• Valid timestamps: {len(timestamps_all)}")
-            if len(timestamps_all) > 0:
-                st.sidebar.write(f"• First timestamp: {timestamps_all[0]}")
-                st.sidebar.write(f"• Last timestamp: {timestamps_all[-1]}")
-            
-            # Ensure we have enough data
             if len(ground_truth_all) < sequence_length + 10:
                 st.error(f"❌ Insufficient data. Need at least {sequence_length + 10} valid data points, but only have {len(ground_truth_all)}.")
                 st.stop()
             
-            # Scaling
             scaler = MinMaxScaler(feature_range=(0, 1))
             scaled_data_all = scaler.fit_transform(data)
             
-            # Split data for training/testing (80/20)
             train_size = int(len(scaled_data_all) * 0.8)
             train_data = scaled_data_all[:train_size]
             test_data = scaled_data_all[train_size:]
             
-            # Create sequences
             def create_sequences(data, seq_length):
                 sequences, targets = [], []
                 for i in range(len(data) - seq_length):
@@ -738,7 +751,6 @@ def main_dashboard():
             X_train, y_train = create_sequences(train_data, sequence_length)
             X_test, y_test = create_sequences(test_data, sequence_length)
 
-            # Predictions on test set
             if len(X_test) > 0:
                 predictions_on_test = model.predict(X_test)
                 predictions_on_test_inv = scaler.inverse_transform(predictions_on_test).flatten()
@@ -746,7 +758,6 @@ def main_dashboard():
                 
                 test_timestamps = timestamps_all[train_size + sequence_length:]
                 
-                # Calculate metrics
                 mse = mean_squared_error(actual_test_inv, predictions_on_test_inv)
                 mae = mean_absolute_error(actual_test_inv, predictions_on_test_inv)
                 r2 = r2_score(actual_test_inv, predictions_on_test_inv)
@@ -757,7 +768,6 @@ def main_dashboard():
                 mse, mae, r2, accuracy = 0, 0, 0, 0
                 st.warning("Insufficient data for testing.")
             
-            # Future predictions (1 month)
             def predict_future(model, last_sequence, scaler, sequence_length, future_steps):
                 predicted_values = []
                 current_sequence = last_sequence.copy()
@@ -771,20 +781,16 @@ def main_dashboard():
                 predicted_values_inv = scaler.inverse_transform(np.array(predicted_values).reshape(-1, 1)).flatten()
                 return predicted_values_inv
 
-            future_steps_1_month = 30 * 24  # 30 days * 24 hours
+            future_steps_1_month = 30 * 24
             last_sequence = scaled_data_all[-sequence_length:]
             future_predictions_inv = predict_future(model, last_sequence, scaler, sequence_length, future_steps_1_month)
             
-            # Future timestamps - with proper validation
             if len(timestamps_all) > 0:
                 last_timestamp = timestamps_all[-1]
                 
-                # Validate last_timestamp
                 if pd.isna(last_timestamp):
-                    st.warning("⚠️ Last timestamp is invalid. Using current time as reference.")
                     last_timestamp = get_current_localized_time()
                 
-                # Ensure it's a proper pandas Timestamp with timezone
                 if not isinstance(last_timestamp, pd.Timestamp):
                     last_timestamp = pd.Timestamp(last_timestamp)
                 
@@ -802,7 +808,6 @@ def main_dashboard():
                     ).tolist()
                 except Exception as e:
                     st.error(f"Error creating future timestamps: {e}")
-                    # Fallback: create timestamps from a known good date
                     fallback_start = get_current_localized_time()
                     future_timestamps = pd.date_range(
                         start=fallback_start, 
@@ -814,14 +819,12 @@ def main_dashboard():
                 st.error("No valid timestamps available for future prediction.")
                 return
             
-            # System status
             current_pressure = ground_truth_all[-1] if len(ground_truth_all) > 0 else 0
             predicted_pressure_now = predictions_on_test_inv[-1] if len(predictions_on_test_inv) > 0 else 0
             
             system_status = "OPERATIONAL"
             predicted_breach_time = None
 
-            # Check future predictions for threshold breach
             for i, val in enumerate(future_predictions_inv):
                 if val >= threshold:
                     predicted_breach_time = future_timestamps[i]
@@ -832,10 +835,8 @@ def main_dashboard():
             elif current_pressure > threshold * 0.8 or predicted_pressure_now > threshold * 0.8 or predicted_breach_time:
                 system_status = "WARNING"
 
-            # Display system status
             show_system_status(system_status, current_pressure, predicted_pressure_now, threshold, predicted_breach_time)
             
-            # KPI Dashboard
             col1, col2, col3, col4, col5 = st.columns(5)
             
             with col1:
@@ -859,13 +860,10 @@ def main_dashboard():
                 delta_val = "URGENT" if maintenance_hours == 0 else None
                 st.metric("Maintenance Window", f"{maintenance_hours}h", delta=delta_val)
             
-            # Main visualization
             st.markdown("### 📈 Process Monitoring & Prediction (Including 1-Month Forecast)")
             
-            # Create comprehensive chart
             fig = go.Figure()
             
-            # Historical Data
             fig.add_trace(go.Scatter(
                 x=timestamps_all, 
                 y=ground_truth_all,
@@ -874,7 +872,6 @@ def main_dashboard():
                 line=dict(color='#2E86AB', width=2)
             ))
             
-            # Future Predictions
             fig.add_trace(go.Scatter(
                 x=future_timestamps,
                 y=future_predictions_inv,
@@ -883,7 +880,6 @@ def main_dashboard():
                 line=dict(color='#00CC96', width=3, dash='dot')
             ))
             
-            # Threshold line
             fig.add_hline(
                 y=threshold,
                 line_dash="dot",
@@ -891,7 +887,6 @@ def main_dashboard():
                 annotation_text=f"Critical Threshold ({threshold})"
             )
             
-            # Update layout
             fig.update_layout(
                 height=600,
                 showlegend=True,
@@ -904,7 +899,6 @@ def main_dashboard():
             
             st.plotly_chart(fig, use_container_width=True)
             
-            # Performance metrics
             st.markdown("### 📊 Model Performance Analysis")
             
             col1, col2 = st.columns(2)
@@ -943,11 +937,9 @@ def main_dashboard():
                     )
                     st.plotly_chart(fig_dist, use_container_width=True)
             
-            # Detailed data table (if enabled)
             if show_detailed_table:
                 st.markdown("### 📋 Detailed Process Data")
                 
-                # Combine historical and future data
                 full_timestamps = timestamps_all + future_timestamps
                 full_pressures = ground_truth_all.tolist() + future_predictions_inv.tolist()
 
@@ -958,7 +950,6 @@ def main_dashboard():
                     'Status': ['Normal' if p < threshold else 'Critical' for p in full_pressures]
                 })
 
-                # Simple pagination
                 rows_per_page = 20
                 
                 if "table_page" not in st.session_state:
@@ -986,13 +977,11 @@ def main_dashboard():
                 
                 st.dataframe(detailed_df.iloc[start_idx:end_idx], use_container_width=True, hide_index=True)
             
-            # Export functionality
             st.markdown("### 📤 Data Export")
             
             col_export_1, col_export_2 = st.columns(2)
             
             with col_export_1:
-                # Create export dataframe
                 export_df = pd.DataFrame({
                     'Timestamp': [ts.strftime('%Y-%m-%d %H:%M:%S') for ts in timestamps_all + future_timestamps],
                     'Pressure': ground_truth_all.tolist() + future_predictions_inv.tolist(),
@@ -1009,9 +998,7 @@ def main_dashboard():
                 )
             
             with col_export_2:
-                # Generate summary report
-                report_text = f"""
-Industrial Gas Removal System - Analysis Report
+                report_text = f"""Industrial Gas Removal System - Analysis Report
 Generated: {get_current_localized_time().strftime('%Y-%m-%d %H:%M:%S')}
 
 SYSTEM STATUS: {system_status}
@@ -1035,8 +1022,7 @@ MAINTENANCE RECOMMENDATION:
 "Immediate maintenance required - System critical!" if system_status == "CRITICAL" else
 "Schedule maintenance within 24 hours" + (f" (Predicted breach by: {predicted_breach_time.strftime('%Y-%m-%d %H:%M')})" if predicted_breach_time else "") if system_status == "WARNING" else
 "No immediate maintenance required"
-}
-                """
+}"""
                 
                 st.download_button(
                     label="📄 Download Summary Report (TXT)",
@@ -1044,10 +1030,6 @@ MAINTENANCE RECOMMENDATION:
                     file_name=f"gas_removal_summary_report_{get_current_localized_time().strftime('%Y%m%d_%H%M%S')}.txt",
                     mime="text/plain"
                 )
-
-# =============================================================================
-# 🚀 MAIN APPLICATION ENTRY POINT
-# =============================================================================
 
 def main():
     if not check_authentication():
